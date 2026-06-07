@@ -51,6 +51,7 @@ fun BatteryGuardApp(viewModel: MainViewModel) {
     val drainApps     by viewModel.drainApps.collectAsStateWithLifecycle()
     val isLoadingApps by viewModel.isLoadingApps.collectAsStateWithLifecycle()
     val isOptimizing  by viewModel.isOptimizing.collectAsStateWithLifecycle()
+    val lastResult    by viewModel.lastResult.collectAsStateWithLifecycle()
     val hasAdvanced   by viewModel.hasAdvanced.collectAsStateWithLifecycle()
     val hasUsagePerm  by viewModel.hasUsagePerm.collectAsStateWithLifecycle()
 
@@ -67,7 +68,13 @@ fun BatteryGuardApp(viewModel: MainViewModel) {
     val content: @Composable (PaddingValues) -> Unit = { pv ->
         Box(Modifier.fillMaxSize().background(BackgroundDark).padding(pv)) {
             when (currentTab) {
-                0 -> DashboardScreen(batteryInfo, isOptimizing, viewModel::optimize)
+                0 -> DashboardScreen(
+                    info            = batteryInfo,
+                    isOptimizing    = isOptimizing,
+                    lastResult      = lastResult,
+                    onOptimize      = viewModel::optimize,
+                    onDismissResult = { viewModel.dismissResult() }
+                )
                 1 -> AppsScreen(drainApps, isLoadingApps, hasUsagePerm, viewModel::loadDrainApps)
                 2 -> SettingsScreen(hasAdvanced)
             }

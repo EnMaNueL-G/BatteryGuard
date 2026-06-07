@@ -67,6 +67,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun dismissResult() { _lastResult.value = null }
+
     fun optimize() {
         if (_isOptimizing.value) return
         viewModelScope.launch {
