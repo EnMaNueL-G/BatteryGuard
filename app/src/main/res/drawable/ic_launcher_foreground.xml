@@ -1,51 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  BatteryGuard — Icono EG
-  Diseño: Iniciales "EG" en tipografía bold sobre fondo de batería estilizada.
-  Paleta: Verde #4CAF50 sobre oscuro #0D1117
-  Único diferenciador: terminal de batería en la parte superior + rayo de carga
+  BatteryGuard — Icono profesional
+  Concepto: Batería vertical clásica de alta calidad con rayo de energía.
+  Sin texto. Legible desde 48×48 hasta 512×512.
+  Fondo configurado en ic_launcher_background.xml (#0B1E0D — verde muy oscuro)
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
 
-    <!-- Cuerpo de la batería (fondo redondeado) -->
+    <!-- ── Cuerpo exterior de la batería ────────────────────────────────────
+         Forma blanco-suave, bordes redondeados r=7. Proporciones reales de batería.
+    -->
     <path
-        android:fillColor="#1A2A1A"
-        android:pathData="M30,30 Q30,22 38,22 L70,22 Q78,22 78,30 L78,84 Q78,92 70,92 L38,92 Q30,92 30,84 Z" />
-
-    <!-- Terminal de batería (parte superior) -->
-    <path
-        android:fillColor="#4CAF50"
-        android:pathData="M44,18 L64,18 Q67,18 67,22 L67,26 L41,26 L41,22 Q41,18 44,18 Z" />
-
-    <!-- Borde verde exterior de la batería -->
-    <path
-        android:fillColor="#4CAF50"
-        android:pathData="M30,30 Q30,22 38,22 L70,22 Q78,22 78,30 L78,84 Q78,92 70,92 L38,92 Q30,92 30,84 Z M34,30 Q34,26 38,26 L70,26 Q74,26 74,30 L74,84 Q74,88 70,88 L38,88 Q34,88 34,84 Z"
-        android:fillAlpha="0.6"/>
-
-    <!-- Nivel de carga (relleno verde ~70%) -->
-    <path
-        android:fillColor="#4CAF50"
-        android:pathData="M34,53 L74,53 L74,84 Q74,88 70,88 L38,88 Q34,88 34,84 Z"
-        android:fillAlpha="0.35"/>
-
-    <!-- "E" — inicial E de Enmanuel -->
-    <path
-        android:fillColor="#4CAF50"
+        android:fillColor="#ECF7ED"
         android:pathData="
-            M36,38 L36,70 L54,70 L54,65 L41,65 L41,57 L52,57 L52,52 L41,52 L41,43 L54,43 L54,38 Z" />
+          M37,27
+          Q37,20 44,20
+          L64,20
+          Q71,20 71,27
+          L71,85
+          Q71,92 64,92
+          L44,92
+          Q37,92 37,85
+          Z" />
 
-    <!-- "G" — inicial G de Gil -->
+    <!-- ── Terminal superior (el bump de la batería) ─────────────────────── -->
     <path
-        android:fillColor="#81C784"
+        android:fillColor="#C8E6C9"
         android:pathData="
-            M72,38 Q59,38 59,54 Q59,70 72,70 L72,70 L74,70 L74,55 L65,55 L65,60 L69,60 L69,65 L68,65 Q63,65 63,54 Q63,43 72,43 Q75,43 77,46 L77,46 L80,43 Q77,38 72,38 Z" />
+          M47,15
+          L61,15
+          Q65,15 65,19
+          L65,23
+          L43,23
+          L43,19
+          Q43,15 47,15
+          Z" />
 
-    <!-- Rayo de carga (símbolo distintivo) -->
+    <!-- ── Cavidad interior oscura ────────────────────────────────────────── -->
     <path
-        android:fillColor="#FFB74D"
-        android:pathData="M56,28 L50,36 L55,36 L52,44 L62,33 L57,33 Z" />
+        android:fillColor="#071408"
+        android:pathData="
+          M41,29
+          Q41,27 43,27
+          L65,27
+          Q67,27 67,29
+          L67,83
+          Q67,85 65,85
+          L43,85
+          Q41,85 41,83
+          Z" />
+
+    <!-- ── Nivel de carga ≈60% (desde abajo) ─────────────────────────────── -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="
+          M41,57
+          L67,57
+          L67,83
+          Q67,85 65,85
+          L43,85
+          Q41,85 41,83
+          Z" />
+
+    <!-- ── Tono más brillante en la franja superior del nivel ─────────────── -->
+    <path
+        android:fillColor="#43A047"
+        android:fillAlpha="0.55"
+        android:pathData="M41,57 L67,57 L67,63 L41,63 Z" />
+
+    <!-- ── Rayo de energía — el elemento focal del icono ─────────────────────
+         Bold, limpio, centrado. Blanco puro para máximo contraste.
+         Flecha tipo zigzag descendente (de arriba-derecha a abajo-izquierda).
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+          M60,31
+          L48,56
+          L56,56
+          L51,79
+          L66,52
+          L58,52
+          Z" />
+
+    <!-- ── Reflejo sutil en el cuerpo de la batería (profundidad) ────────── -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.12"
+        android:pathData="
+          M37,27
+          Q37,20 44,20
+          L54,20
+          L54,92
+          L44,92
+          Q37,92 37,85
+          Z" />
 
 </vector>
