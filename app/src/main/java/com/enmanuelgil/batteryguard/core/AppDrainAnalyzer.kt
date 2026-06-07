@@ -30,6 +30,7 @@ object AppDrainAnalyzer {
 
         return usageStats
             .filter { it.totalTimeInForeground > 0 || it.totalTimeForegroundServiceUsed > 0 }
+            .filter { it.packageName != context.packageName }  // Excluir la propia app del ranking
             .mapNotNull { stats ->
                 val appName = try {
                     pm.getApplicationLabel(
