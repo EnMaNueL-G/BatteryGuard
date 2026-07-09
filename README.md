@@ -102,8 +102,8 @@ adb shell pm grant com.enmanuelgil.batteryguard android.permission.WRITE_SECURE_
 
 BatteryGuard es **gratuita, sin anuncios y de código abierto**.
 
-**Binance Pay ID:** `1140153333`
-**BSC BEP20:** `0x0a9a0d8d816ede885d1d4a5c94369a72ef86b3c1`
+**Binance Pay ID:** `1165745950`
+**BSC BEP20:** `0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08`
 
 ---
 

@@ -73,10 +73,10 @@ fun SettingsScreen(hasAdvanced: Boolean) {
                     fontSize = 13.sp, color = TextSecondary, lineHeight = 18.sp)
                 HorizontalDivider(color = TextSecondary.copy(alpha = 0.1f))
                 Text("Binance Pay ID", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = BatteryYellow)
-                DonationRow("Pay ID", "1140153333") { clipboard.setText(AnnotatedString("1140153333")) }
+                DonationRow("Pay ID", "1165745950") { clipboard.setText(AnnotatedString("1165745950")) }
                 Text("BSC BEP20 (Binance Smart Chain)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = BatteryYellow)
-                DonationRow("Dirección", "0x0a9a0d8d816ede885d1d4a5c94369a72ef86b3c1") {
-                    clipboard.setText(AnnotatedString("0x0a9a0d8d816ede885d1d4a5c94369a72ef86b3c1"))
+                DonationRow("Dirección", "0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08") {
+                    clipboard.setText(AnnotatedString("0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08"))
                 }
             }
         }
