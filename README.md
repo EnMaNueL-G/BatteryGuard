@@ -1,118 +1,78 @@
 # BatteryGuard
 
-**Desarrollado por Enmanuel Gil**
-Versión 1.0.0 | Android 8.0+ (API 26) | Sin dependencias externas
+**Desarrollado por Enmanuel Gil · OptiSuite** — Android 8.0+ · gratis · sin anuncios · código abierto
 
-Aplicación Android que analiza la salud real de tu batería, identifica las apps que más la drenan y aplica optimizaciones para extender su duración. Información clara, en tiempo real y sin necesidad de root.
+Cuida la batería de tu Android con datos **reales**: salud medida con tus propias cargas, aviso para desenchufar al 80 %, alertas de calor y batería baja, y qué apps usas más. Sin inventar números: si Android no da un dato, BatteryGuard lo dice.
 
----
-
-## Características
-
-### Panel Principal en Tiempo Real
-- Indicador circular animado con nivel de batería actual
-- Temperatura en tiempo real con alertas visuales
-- Voltaje instantáneo
-- Tiempo restante estimado (o tiempo de carga si está conectado)
-- Estado de salud de la batería (Buena / Sobrecalentada / Muerta / etc.)
-- Ciclos de carga (Android 14+ nativo)
-- Capacidad actual estimada en mAh
-
-### Análisis de Apps por Consumo
-- Lista las apps que más batería consumieron en las últimas 24 horas
-- Tiempo en primer plano y en background por app
-- Barra de progreso coloreada por nivel de impacto
-- Requiere permiso de acceso al historial de uso (se solicita desde la app)
-
-### Optimización con un Toque
-- Mata procesos en background para liberar CPU y reducir consumo
-- Fuerza Garbage Collection del sistema
-- Reduce animaciones (requiere activación avanzada por ADB)
-- Desactiva WiFi scan pasivo
-
-### Monitor en Background
-- Notificación persistente con nivel y temperatura en tiempo real
-- Alerta automática cuando la temperatura supera 45°C
-- Se activa automáticamente al encender el dispositivo
+**Descarga:** [BatteryGuard.apk](https://github.com/EnMaNueL-G/BatteryGuard/releases/latest/download/BatteryGuard.apk) (se instala encima de la versión anterior).
 
 ---
 
-## Instalación
+## Qué hace
 
-1. Descarga `BatteryGuard-v1.0.0.apk` desde [Releases](https://github.com/EnMaNueL-G/BatteryGuard/releases)
-2. En el teléfono: **Ajustes → Seguridad → Instalar apps de origen desconocido → Activar**
-3. Abre el APK e instala
-4. La app funciona de inmediato
+### 🔋 Batería en tiempo real
+- Nivel, temperatura, voltaje y **corriente real** (mA que entran o salen) y **potencia** en vatios.
+- **Tiempo restante / hasta el 100 %** calculado al ritmo actual (si no hay datos suficientes muestra «—», nunca una cifra inventada).
+- Estado de salud según Android, **ciclos de carga** (Android 14+) y datos técnicos en bruto.
+- Cada fabricante informa la corriente a su manera (µA o mA, signo al revés): BatteryGuard lo normaliza.
 
----
+### ❤️ Salud real de la batería
+- **Capacidad de fábrica** leída del perfil de energía del fabricante.
+- **Capacidad actual** medida en tus cargas: mAh que entran al subir de ≤ 60 % a ≥ 80 % (mismo método que AccuBattery). Mediana de las últimas cargas, con filtros contra lecturas absurdas.
+- Mientras no hay cargas medidas, una **estimación rápida** con el medidor de la batería, marcada como tal.
 
-## Activar Optimización Avanzada (Opcional)
+### 🔔 Avisos (monitor en segundo plano)
+- **Límite de carga**: te avisa al llegar al 80 % (o el % que elijas). Parar ahí alarga la vida de la batería.
+- **Batería caliente** (42 °C por defecto) y **batería baja** (opcional).
+- El monitor **no hace sondeos**: solo reacciona cuando Android avisa de un cambio. Compatible con Android 15/16 (arranca al encender el móvil).
 
-Para desbloquear control de animaciones y WiFi scan: ejecuta **una sola vez** desde PC con el teléfono conectado por USB.
+### 📱 Apps que más usas
+Tiempo en pantalla y en segundo plano de las últimas 24 h. **Android no deja que una app mida la batería que gastan otras** (solo el sistema): el tiempo de uso es la mejor pista honesta. Botón al consumo real en los Ajustes de Android y, al tocar una app, a su información para restringirla.
 
-### Activar Depuración USB (si no está activa)
-1. **Ajustes → Acerca del teléfono** → Toca "Número de compilación" 7 veces
-2. **Ajustes → Opciones de desarrollador** → Activa "Depuración USB"
-3. Conecta el teléfono al PC — toca "Permitir" en el popup
-
-### Comando ADB
+### ⚙️ Avanzado (opcional, por ADB)
+Desactivar la **búsqueda de Wi‑Fi y Bluetooth en segundo plano** (Android escanea para la ubicación aunque los tengas apagados). Se guarda el valor original y **«Restaurar» lo deja como estaba**.
 ```bash
 adb shell pm grant com.enmanuelgil.batteryguard android.permission.WRITE_SECURE_SETTINGS
 ```
 
-> ⚠️ Xiaomi MIUI V14 / HyperOS bloquea este permiso. La app funciona igual en modo básico.
-
 ---
 
-## Consejos para maximizar la batería
-
-- Carga entre **20% y 80%** — evita llegar a 0% o 100% constantemente
-- Temperaturas superiores a **45°C dañan permanentemente** las células de la batería
-- Pantalla y WiFi son los mayores consumidores — reduce brillo y desactiva cuando no uses
-- El modo oscuro en pantallas OLED ahorra hasta un 15% de batería
-- Mantener muchas apps abiertas en background aumenta el consumo aunque no las uses
-
----
-
-## Compatibilidad
-
-| Dispositivo | Android | Básico | Avanzado |
-|-------------|---------|--------|----------|
-| Samsung Galaxy S21 | Android 15 | ✅ | ✅ |
-| Samsung Galaxy J7 Prime | Android 8.1 | ✅ | ✅ |
-| Xiaomi Redmi Note 12 | Android 14 | ✅ | ✅ |
-| Xiaomi con MIUI V14 | Android 13 | ✅ | ⚠️ ADB bloqueado |
-
----
+## Lo que BatteryGuard NO hace (a propósito)
+«Matar procesos» o «limpiar RAM» **no ahorra batería** en Android moderno: el sistema vuelve a abrir esas apps y gasta más. La versión 1.0.0 lo prometía y no funcionaba; se ha quitado.
 
 ## Permisos
-
 | Permiso | Para qué |
-|---------|----------|
-| `KILL_BACKGROUND_PROCESSES` | Matar apps en background al optimizar |
-| `FOREGROUND_SERVICE` | Monitor en background |
-| `POST_NOTIFICATIONS` | Alertas de temperatura |
-| `RECEIVE_BOOT_COMPLETED` | Auto-inicio al encender |
-| `PACKAGE_USAGE_STATS` | Ver qué apps consumen más batería |
-| `WRITE_SECURE_SETTINGS` *(ADB, opcional)* | Animaciones, WiFi scan |
+|---|---|
+| Notificaciones | Monitor y avisos |
+| Servicio en primer plano (specialUse) · arranque | Monitor en segundo plano, si lo activas |
+| Acceso de uso (lo concedes tú) | Tiempo de uso por app |
+| WRITE_SECURE_SETTINGS (ADB, opcional) | Búsqueda de redes en segundo plano |
+
+No recoge datos, no tiene anuncios y no usa Internet.
 
 ---
 
-## Apoya el Proyecto
+## Cambios
 
-BatteryGuard es **gratuita, sin anuncios y de código abierto**.
+### v1.1.0
+- **Salud real** (antes siempre mostraba 85 %), **ciclos** reales (antes mostraba el % de carga), capacidad de fábrica y actual bien etiquetadas.
+- **Aviso de límite de carga**, calor configurable y batería baja.
+- Corriente y potencia reales con unidades normalizadas; tiempo restante sin cifras inventadas.
+- «Consumo por app» → **tiempo de uso** honesto, sin apps repetidas, sin congelar la pantalla y con acceso a restringir cada app.
+- Quitado el «Optimizar» que no hacía nada; los ajustes avanzados ahora tienen respaldo y restauración (antes cambiaba las animaciones sin avisar).
+- Monitor ligero y compatible con Android 15/16; pide el permiso de notificaciones (en Android 13+ antes no se veía nada).
+- Pruebas automáticas de los cálculos.
 
-**Binance Pay ID:** `1165745950`
-**BSC BEP20:** `0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08`
+### v1.0.0
+- Versión inicial.
 
 ---
 
-## Créditos
+## Compilar
+Android Studio (JDK 17) · `gradlew assembleRelease` · pruebas: `gradlew testReleaseUnitTest`.
 
-**Desarrollado por:** Enmanuel Gil
-**UI:** Jetpack Compose con Material Design 3 — tema verde oscuro
-**Compatibilidad:** Android 8.0 — Android 15
+## Apoya el proyecto
+- **Binance Pay ID:** `1165745950`
+- **USDT (BSC · BEP-20):** `0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08`
 
----
-
-*BatteryGuard v1.0.0 — Cuida tu batería, sin complicaciones*
+© 2026 Enmanuel Gil · OptiSuite — [github.com/EnMaNueL-G](https://github.com/EnMaNueL-G)

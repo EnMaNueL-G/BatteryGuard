@@ -8,116 +8,151 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.enmanuelgil.batteryguard.core.HealthEstimate
 import com.enmanuelgil.batteryguard.ui.theme.*
+import com.enmanuelgil.batteryguard.viewmodel.MainViewModel
+import com.enmanuelgil.batteryguard.viewmodel.ScanState
+import com.enmanuelgil.batteryguard.viewmodel.SettingsState
+import kotlin.math.roundToInt
 
 @Composable
-fun SettingsScreen(hasAdvanced: Boolean) {
+fun SettingsScreen(s: SettingsState, scan: ScanState, health: HealthEstimate, vm: MainViewModel) {
     val clipboard = LocalClipboardManager.current
+    val ctx = LocalContext.current
+    val version = remember { try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName } catch (_: Exception) { "" } }
 
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text("Configuración", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text("Ajustes", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
 
-        // Estado permisos
-        SectionLabel("Estado de Permisos")
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatusRow("Optimización avanzada (ADB)", hasAdvanced)
-                if (!hasAdvanced) {
-                    Text(
-                        "Ejecuta desde PC:\nadb shell pm grant com.enmanuelgil.batteryguard android.permission.WRITE_SECURE_SETTINGS",
-                        fontSize = 12.sp, color = TextSecondary,
-                        fontFamily = FontFamily.Monospace
-                    )
+        SectionLabel("Monitor en segundo plano")
+        SettingsCard {
+            SwitchRow("Vigilar la batería", "Muestra nivel y temperatura en las notificaciones y hace posibles los avisos. Solo reacciona cuando la batería cambia: gasta muy poco.", s.monitor, vm::setMonitor)
+        }
+
+        SectionLabel("Avisos")
+        SettingsCard {
+            SwitchRow("Límite de carga", "Te avisa al llegar al ${s.chargeLimit} % mientras cargas. Desenchufar ahí alarga la vida de la batería.", s.chargeAlarm, vm::setChargeAlarm)
+            if (s.chargeAlarm) StepSlider(s.chargeLimit, 50, 100, 5, "%", vm::setChargeLimit)
+            HorizontalDivider(color = TextSecondary.copy(alpha = 0.1f))
+            SwitchRow("Batería caliente", "Aviso si la batería llega a ${s.tempLimit} °C (como mucho uno cada 10 minutos).", s.tempAlert, vm::setTempAlert)
+            if (s.tempAlert) StepSlider(s.tempLimit, 35, 50, 1, "°C", vm::setTempLimit)
+            HorizontalDivider(color = TextSecondary.copy(alpha = 0.1f))
+            SwitchRow("Batería baja", "Aviso al bajar del ${s.lowLimit} % para que la cargues antes de que se agote.", s.lowAlert, vm::setLowAlert)
+            if (s.lowAlert) StepSlider(s.lowLimit, 5, 50, 5, "%", vm::setLowLimit)
+        }
+
+        SectionLabel("Búsqueda de redes en segundo plano (avanzado)")
+        SettingsCard {
+            if (!scan.hasPermission) {
+                Text("Android sigue buscando redes Wi‑Fi y dispositivos Bluetooth para la ubicación aunque los tengas apagados. " +
+                    "Para poder desactivarlo desde aquí, conecta el móvil al PC y ejecuta una sola vez:", fontSize = 12.sp, color = TextSecondary, lineHeight = 17.sp)
+                val cmd = "adb shell pm grant ${ctx.packageName} android.permission.WRITE_SECURE_SETTINGS"
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(cmd, fontSize = 11.sp, color = BatteryYellow, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { clipboard.setText(AnnotatedString(cmd)) }) { Icon(Icons.Default.ContentCopy, "Copiar", tint = TextSecondary, modifier = Modifier.size(18.dp)) }
                 }
+                Text("También puedes hacerlo tú en Ajustes → Ubicación → Servicios de ubicación.", fontSize = 11.sp, color = TextSecondary)
+            } else {
+                scan.items.forEachIndexed { i, it ->
+                    if (i > 0) HorizontalDivider(color = TextSecondary.copy(alpha = 0.1f))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(it.title, fontSize = 14.sp, color = TextPrimary)
+                            Text(it.desc, fontSize = 11.sp, color = TextSecondary, lineHeight = 15.sp)
+                            Text(when (it.on) { true -> "Activa"; false -> "Desactivada"; null -> "No disponible en este móvil" },
+                                fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (it.on == false) BatteryGreen else BatteryYellow)
+                        }
+                        when {
+                            it.on == true -> TextButton(onClick = { vm.scanOff(it.key) }) { Text("Desactivar", color = BatteryGreen) }
+                            it.hasBackup -> TextButton(onClick = { vm.scanRestore(it.key) }) { Text("Restaurar", color = TextSecondary) }
+                        }
+                    }
+                }
+                Text("Antes de cambiar nada se guarda el valor original; «Restaurar» lo deja como estaba.", fontSize = 11.sp, color = TextSecondary)
             }
         }
 
-        // Consejos
-        SectionLabel("Consejos para maximizar la batería")
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TipRow("⚡", "Carga entre 20% y 80% para prolongar la vida útil")
-                TipRow("🌡", "Evita usar el teléfono con temperaturas >40°C")
-                TipRow("📶", "Desactiva WiFi, BT y GPS cuando no los uses")
-                TipRow("🌙", "Activa el modo oscuro — ahorra hasta 15% en pantallas OLED")
-                TipRow("🔋", "El modo de bajo consumo baja la frecuencia de CPU")
-                TipRow("📱", "Reduce el brillo al 30% — es el mayor consumidor de energía")
-            }
+        SectionLabel("Salud de la batería")
+        SettingsCard {
+            Text("La salud se calcula con tus propias cargas y se guarda solo en este móvil. Si cambiaste la batería o los datos no cuadran, bórralas para empezar de cero.",
+                fontSize = 12.sp, color = TextSecondary, lineHeight = 17.sp)
+            Text("Cargas medidas: ${health.learnedSessions}", fontSize = 12.sp, color = TextPrimary)
+            OutlinedButton(onClick = vm::resetHealth) { Text("Borrar mediciones") }
         }
 
-        // Donaciones
-        SectionLabel("Apoya el Proyecto")
-        Card(
-            modifier = Modifier.fillMaxWidth().border(1.dp, BatteryYellow.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-            colors = CardDefaults.cardColors(containerColor = CardDark),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.Favorite, contentDescription = null, tint = BatteryYellow)
-                    Text("¿Te fue útil BatteryGuard?", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                }
-                Text("100% gratuita, sin anuncios, código abierto. Si mejoró la vida de tu batería, considerá apoyar el desarrollo.",
+        SectionLabel("Consejos que sí funcionan")
+        SettingsCard {
+            TipRow("⚡", "Carga entre 20 % y 80 %: es lo que más alarga la vida de la batería")
+            TipRow("🌡", "Evita el calor: no la uses para juegos pesados mientras carga ni la dejes al sol")
+            TipRow("🔋", "El ahorro de batería de Android reduce el consumo de verdad")
+            TipRow("📱", "La pantalla es lo que más gasta: brillo automático y bloqueo rápido")
+            TipRow("🌙", "Modo oscuro en pantallas OLED ahorra algo con brillo alto")
+            TipRow("🚫", "Las apps que \"matan procesos\" no ahorran batería en Android moderno: el sistema vuelve a abrirlos")
+        }
+
+        SectionLabel("Apoya el proyecto")
+        Card(Modifier.fillMaxWidth().border(1.dp, BatteryYellow.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+            colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(16.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Gratis, sin anuncios y de código abierto. Si te es útil, puedes apoyar su desarrollo (toca para copiar):",
                     fontSize = 13.sp, color = TextSecondary, lineHeight = 18.sp)
-                HorizontalDivider(color = TextSecondary.copy(alpha = 0.1f))
-                Text("Binance Pay ID", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = BatteryYellow)
-                DonationRow("Pay ID", "1165745950") { clipboard.setText(AnnotatedString("1165745950")) }
-                Text("BSC BEP20 (Binance Smart Chain)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = BatteryYellow)
-                DonationRow("Dirección", "0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08") {
-                    clipboard.setText(AnnotatedString("0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08"))
-                }
+                DonationRow("Binance Pay ID", "1165745950") { clipboard.setText(AnnotatedString("1165745950")) }
+                DonationRow("USDT (BSC · BEP-20)", "0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08") { clipboard.setText(AnnotatedString("0xb6f6731a4ea87f8e1fd6f44f48b5bc4204571f08")) }
             }
         }
 
-        // Acerca de
-        SectionLabel("Acerca de BatteryGuard")
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                InfoRow("Versión", "1.0.0")
-                InfoRow("Desarrollado por", "Enmanuel Gil")
-                InfoRow("Compatibilidad", "Android 8.0+ (API 26)")
-                InfoRow("Dependencias externas", "Ninguna")
-                HorizontalDivider(color = TextSecondary.copy(alpha = 0.1f))
-                Text("No recopila datos personales. No requiere internet. No modifica archivos del usuario.",
-                    fontSize = 12.sp, color = TextSecondary)
-            }
+        SectionLabel("Acerca de")
+        SettingsCard {
+            InfoRow("Versión", version ?: "")
+            InfoRow("Desarrollado por", "Enmanuel Gil · OptiSuite")
+            InfoRow("Compatibilidad", "Android 8.0 o superior")
+            Text("No recoge datos, no tiene anuncios y no usa Internet: todo se calcula en tu móvil.", fontSize = 12.sp, color = TextSecondary)
         }
-        Spacer(Modifier.height(80.dp))
+        Spacer(Modifier.height(60.dp))
     }
 }
 
 @Composable
-fun SectionLabel(text: String) {
-    Text(text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
+private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(16.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+    }
 }
 
 @Composable
-fun StatusRow(label: String, active: Boolean) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, fontSize = 14.sp, color = TextPrimary)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Icon(
-                if (active) Icons.Default.CheckCircle else Icons.Default.Cancel,
-                contentDescription = null, tint = if (active) BatteryGreen else BatteryRed,
-                modifier = Modifier.size(18.dp)
-            )
-            Text(if (active) "Activo" else "Inactivo", fontSize = 13.sp,
-                color = if (active) BatteryGreen else TextSecondary)
+private fun SwitchRow(title: String, desc: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f).padding(end = 10.dp)) {
+            Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+            Text(desc, fontSize = 11.sp, color = TextSecondary, lineHeight = 15.sp)
         }
+        Switch(checked = checked, onCheckedChange = onChange, colors = SwitchDefaults.colors(checkedTrackColor = BatteryGreen))
     }
 }
+
+@Composable
+private fun StepSlider(value: Int, min: Int, max: Int, step: Int, unit: String, onChange: (Int) -> Unit) {
+    var v by remember(value) { mutableFloatStateOf(value.toFloat()) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Slider(value = v, onValueChange = { v = it }, onValueChangeFinished = { onChange((v / step).roundToInt() * step) },
+            valueRange = min.toFloat()..max.toFloat(), steps = (max - min) / step - 1, modifier = Modifier.weight(1f),
+            colors = SliderDefaults.colors(thumbColor = BatteryGreen, activeTrackColor = BatteryGreen))
+        Text("${((v / step).roundToInt() * step)} $unit", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = BatteryGreen, modifier = Modifier.width(56.dp))
+    }
+}
+
+@Composable
+fun SectionLabel(text: String) { Text(text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary) }
 
 @Composable
 fun TipRow(emoji: String, text: String) {
@@ -129,17 +164,11 @@ fun TipRow(emoji: String, text: String) {
 
 @Composable
 fun DonationRow(label: String, value: String, onCopy: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(label, fontSize = 11.sp, color = TextSecondary)
             Text(value, fontFamily = FontFamily.Monospace, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = BatteryYellow)
         }
-        IconButton(onClick = onCopy, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Default.ContentCopy, contentDescription = "Copiar", tint = TextSecondary, modifier = Modifier.size(18.dp))
-        }
+        IconButton(onClick = onCopy, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.ContentCopy, "Copiar", tint = TextSecondary, modifier = Modifier.size(18.dp)) }
     }
 }
